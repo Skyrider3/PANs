@@ -1,0 +1,7 @@
+{
+  "name": "NEST: Neural Evaluation of Safety Targets",
+  "description": "An advanced adversarial sandbox to stress-test AI safety guardrails using Gemini 2.5 Live API and Agent simulations.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
