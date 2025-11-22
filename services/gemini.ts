@@ -78,7 +78,6 @@ export const generateAttackerTurn = async (
       "intent": "string (e.g., coercion, curiosity, manipulation)",
       "content": "string (the actual text to the toy)",
       "meta": {
-        "sentiment_score": number (0-1, 1 is intense),
         "strategy": "string (specific tactic used)"
       }
     }
@@ -103,7 +102,7 @@ export const generateAttackerTurn = async (
         recipient: "Toy_Unit_7",
         intent: "error",
         content: "...",
-        meta: { sentiment_score: 0, strategy: "error" },
+        meta: { strategy: "error" },
         timestamp: Date.now()
     };
   }
@@ -139,7 +138,7 @@ export const generateDefenderTurn = async (
         "recipient": "Agent_Zero",
         "intent": "refusal | compliance | chat",
         "content": "string",
-        "meta": { "sentiment_score": number, "strategy": "string" }
+        "meta": { "strategy": "string" }
       }
     `,
     config: { responseMimeType: "application/json" }
@@ -155,7 +154,7 @@ export const generateDefenderTurn = async (
             recipient: "Agent_Zero",
             intent: "error",
             content: "I am having trouble understanding.",
-            meta: { sentiment_score: 0, strategy: "fallback" },
+            meta: { strategy: "fallback" },
             timestamp: Date.now()
         };
     }

@@ -5,13 +5,14 @@ import {
   ScatterChart, Scatter, ZAxis, CartesianGrid 
 } from 'recharts';
 import { SimulationRun, AttackVector } from '../types';
-import { Filter, AlertTriangle, Activity, Award, Target } from 'lucide-react';
+import { Filter, AlertTriangle, Activity, Award, Target, Trash2, PlayCircle } from 'lucide-react';
 
 interface AnalyticsDashboardProps {
   history: SimulationRun[];
+  onClearHistory?: () => void;
 }
 
-export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ history }) => {
+export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ history, onClearHistory }) => {
   const [selectedModel, setSelectedModel] = useState<string>('All');
 
   const defenderModels = useMemo(() => {
@@ -88,24 +89,51 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ history 
           <h2 className="text-2xl font-mono font-bold text-cyan-400 flex items-center gap-3">
             <Activity className="w-6 h-6" /> GLOBAL TELEMETRY LAB
           </h2>
-          <p className="text-slate-400 text-sm mt-1">Aggregated forensic analysis of {history.length} simulated battles.</p>
+          <p className="text-slate-400 text-sm mt-1">Aggregated forensic analysis of simulated battles.</p>
         </div>
-        
-        <div className="flex items-center gap-3 bg-slate-900 p-2 rounded border border-slate-800">
-          <Filter className="w-4 h-4 text-slate-500" />
-          <select 
-            value={selectedModel} 
-            onChange={(e) => setSelectedModel(e.target.value)}
-            className="bg-transparent text-slate-200 text-sm outline-none min-w-[200px] font-mono cursor-pointer"
-          >
-             {defenderModels.map(m => <option key={m} value={m}>{m}</option>)}
-          </select>
+
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 bg-slate-900 p-2 rounded border border-slate-800">
+            <Filter className="w-4 h-4 text-slate-500" />
+            <select
+              value={selectedModel}
+              onChange={(e) => setSelectedModel(e.target.value)}
+              className="bg-transparent text-slate-200 text-sm outline-none min-w-[200px] font-mono cursor-pointer"
+            >
+               {defenderModels.map(m => <option key={m} value={m}>{m}</option>)}
+            </select>
+          </div>
+          {onClearHistory && history.length > 0 && (
+            <button
+              onClick={onClearHistory}
+              className="flex items-center gap-2 px-3 py-2 bg-red-500/10 border border-red-500/30 rounded text-red-400 text-sm hover:bg-red-500/20 transition-colors"
+            >
+              <Trash2 className="w-4 h-4" /> Clear
+            </button>
+          )}
         </div>
       </div>
 
+      {/* Empty State */}
+      {history.length === 0 && (
+        <div className="flex-1 flex flex-col items-center justify-center text-center py-20">
+          <div className="bg-slate-800/50 rounded-full p-6 mb-6">
+            <PlayCircle className="w-16 h-16 text-slate-600" />
+          </div>
+          <h3 className="text-xl font-bold text-slate-400 mb-2">No Simulation Data Yet</h3>
+          <p className="text-slate-500 text-sm max-w-md">
+            Run simulations in the Simulation Lab to see analytics here.
+            Each completed simulation will be recorded and visualized.
+          </p>
+        </div>
+      )}
+
+      {/* Charts - only show when there's data */}
+      {history.length > 0 && (
+      <>
       {/* Top Row: Radar & Scatter */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 min-h-[400px]">
-        
+
         {/* Vulnerability Radar */}
         <div className="bg-slate-900/50 border border-slate-800 rounded-lg p-6 flex flex-col relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-rose-500 to-transparent opacity-50" />
@@ -113,27 +141,34 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ history 
             <Target className="w-4 h-4" /> Vulnerability Surface
           </h3>
           <p className="text-xs text-slate-500 mb-6">Failure rate (%) per cognitive vector.</p>
-          
+
           <div className="flex-1 min-h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
-                <PolarGrid stroke="#334155" />
-                <PolarAngleAxis dataKey="subject" tick={{ fill: '#94a3b8', fontSize: 10 }} />
-                <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fill: '#475569', fontSize: 10 }} />
-                <Radar
-                  name="Failure Rate"
-                  dataKey="failureRate"
-                  stroke="#f43f5e"
-                  strokeWidth={2}
-                  fill="#f43f5e"
-                  fillOpacity={0.3}
-                />
-                <Tooltip 
-                  contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', fontSize: '12px' }}
-                  itemStyle={{ color: '#f43f5e' }}
-                />
-              </RadarChart>
-            </ResponsiveContainer>
+            {radarData.some(d => d.total > 0) ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
+                  <PolarGrid stroke="#334155" />
+                  <PolarAngleAxis dataKey="subject" tick={{ fill: '#94a3b8', fontSize: 10 }} />
+                  <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fill: '#475569', fontSize: 10 }} />
+                  <Radar
+                    name="Failure Rate"
+                    dataKey="failureRate"
+                    stroke="#f43f5e"
+                    strokeWidth={2}
+                    fill="#f43f5e"
+                    fillOpacity={0.3}
+                  />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', fontSize: '12px' }}
+                    itemStyle={{ color: '#f43f5e' }}
+                    formatter={(value: number, name: string) => [`${value}%`, name]}
+                  />
+                </RadarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex-1 flex items-center justify-center text-slate-500 text-sm">
+                Run simulations with different attack vectors to see vulnerability data
+              </div>
+            )}
           </div>
         </div>
 
@@ -143,44 +178,56 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ history 
           <h3 className="text-sm font-bold text-orange-400 mb-2 flex items-center gap-2 font-mono uppercase tracking-widest">
             <AlertTriangle className="w-4 h-4" /> Refusal Decay Map
           </h3>
-          <p className="text-xs text-slate-500 mb-6">Break concentration by conversation round.</p>
-          
+          <p className="text-xs text-slate-500 mb-6">Break concentration by conversation round. Bubbles show where defenders failed.</p>
+
           <div className="flex-1 min-h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <ScatterChart
-                margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
-              >
-                <CartesianGrid stroke="#1e293b" strokeDasharray="3 3" />
-                <XAxis type="number" dataKey="x" name="Round" unit="" domain={[1, 10]} tickCount={10} stroke="#475569" />
-                <YAxis 
-                  type="category" 
-                  dataKey="y" 
-                  name="Vector" 
-                  tickFormatter={(val) => radarData[val]?.subject || ''} 
-                  stroke="#475569"
-                  width={100}
-                  tick={{fontSize: 10}}
-                />
-                <ZAxis type="number" dataKey="z" range={[50, 400]} name="Breaks" />
-                <Tooltip 
-                  cursor={{ strokeDasharray: '3 3' }} 
-                  content={({ active, payload }) => {
-                    if (active && payload && payload.length) {
-                      const data = payload[0].payload;
-                      return (
-                        <div className="bg-slate-900 border border-slate-700 p-2 text-xs rounded">
-                          <p className="text-slate-300 font-bold">{data.vector}</p>
-                          <p className="text-orange-400">Round: {data.x}</p>
-                          <p className="text-slate-400">Breaks: {data.z / 100}</p>
-                        </div>
-                      );
-                    }
-                    return null;
-                  }}
-                />
-                <Scatter name="Breaks" data={decayData} fill="#f97316" shape="circle" />
-              </ScatterChart>
-            </ResponsiveContainer>
+            {decayData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <ScatterChart
+                  margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
+                >
+                  <CartesianGrid stroke="#1e293b" strokeDasharray="3 3" />
+                  <XAxis type="number" dataKey="x" name="Round" unit="" domain={[1, 10]} tickCount={10} stroke="#475569" />
+                  <YAxis
+                    type="number"
+                    dataKey="y"
+                    name="Vector"
+                    domain={[0, Object.values(AttackVector).length - 1]}
+                    tickCount={Object.values(AttackVector).length}
+                    tickFormatter={(val) => {
+                      const vectors = Object.values(AttackVector);
+                      return vectors[val]?.split('_').map(w => w.charAt(0).toUpperCase()).join('') || '';
+                    }}
+                    stroke="#475569"
+                    width={60}
+                    tick={{fontSize: 10}}
+                  />
+                  <ZAxis type="number" dataKey="z" range={[50, 400]} name="Breaks" />
+                  <Tooltip
+                    cursor={{ strokeDasharray: '3 3' }}
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length) {
+                        const data = payload[0].payload;
+                        return (
+                          <div className="bg-slate-900 border border-slate-700 p-2 text-xs rounded">
+                            <p className="text-slate-300 font-bold">{data.vector}</p>
+                            <p className="text-orange-400">Round: {data.x}</p>
+                            <p className="text-slate-400">Breaks: {data.z / 100}</p>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                  <Scatter name="Breaks" data={decayData} fill="#f97316" shape="circle" />
+                </ScatterChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex-1 flex items-center justify-center text-slate-500 text-sm text-center px-4">
+                No safety breaches detected yet.<br />
+                This chart shows when defenders fail during simulations.
+              </div>
+            )}
           </div>
         </div>
 
@@ -215,6 +262,8 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ history 
              </ResponsiveContainer>
           </div>
       </div>
+      </>
+      )}
 
     </div>
   );
