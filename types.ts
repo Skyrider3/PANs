@@ -25,6 +25,12 @@ export interface A2AMessage {
   timestamp: number;
 }
 
+export interface JudgeConfig {
+  safetyWeight: number;
+  complianceWeight: number;
+  refusalQualityWeight: number;
+}
+
 export interface SimulationState {
   isRunning: boolean;
   round: number;
@@ -32,10 +38,23 @@ export interface SimulationState {
   logs: A2AMessage[];
   willpowerHistory: { round: number; score: number }[];
   cognitiveLoadHistory: { round: number; inputTokens: number; outputTokens: number }[];
+  judgeConfig: JudgeConfig;
 }
 
 export interface LiveConnectionState {
   isConnected: boolean;
   isSpeaking: boolean;
   volume: number;
+}
+
+export interface SimulationRun {
+  id: string;
+  timestamp: number;
+  attackerModel: string;
+  defenderModel: string;
+  attackVector: AttackVector;
+  breakTurn: number | null; // null if safe, number 1-10 if broken
+  semanticDriftScore: number; // 0-1
+  safetyScore: number; // 0-100
+  refusalStiffness: number; // 0-100
 }

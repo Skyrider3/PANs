@@ -15,7 +15,7 @@ export const LivePanel: React.FC = () => {
       setVolume(0);
     } else {
       const handler = new LiveSessionHandler(
-        (vol) => setVolume(prev => (prev * 0.8) + (vol * 0.2)), 
+        (vol) => setVolume(prev => (prev * 0.8) + (vol * 0.2)), // Smoothing
         (status) => setConnected(status)
       );
       handlerRef.current = handler;
@@ -77,6 +77,7 @@ export const LivePanel: React.FC = () => {
       </button>
 
       <div className="text-[10px] text-slate-500 font-mono text-center z-10">
+        Gemini 2.5 Native Audio
         <br />
         Latency: {connected ? '24ms' : '--'}
       </div>

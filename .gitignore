@@ -206,3 +206,8 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 node_modules
+
+architecture.md
+.env
+questions.md
+current_architecture_analsyis.md
